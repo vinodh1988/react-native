@@ -5,9 +5,12 @@
  * @format
  */
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import Contacts from 'react-native-contacts';
 import type {PropsWithChildren} from 'react';
 import {
+  FlatList,
+  PermissionsAndroid,
   SafeAreaView,
   ScrollView,
   StatusBar,
@@ -24,12 +27,13 @@ import {
   LearnMoreLinks,
   ReloadInstructions,
 } from 'react-native/Libraries/NewAppScreen';
+import { SectionConnected } from './Redux/Hocs/Section';
 
 type SectionProps = PropsWithChildren<{
-  title: string;
+  quote: string;
 }>;
 
-function Section({children, title}: SectionProps): React.JSX.Element {
+export function Section({children, quote}: SectionProps): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
   return (
     <View style={styles.sectionContainer}>
@@ -40,17 +44,9 @@ function Section({children, title}: SectionProps): React.JSX.Element {
             color: isDarkMode ? Colors.white : Colors.black,
           },
         ]}>
-        {title}
+        {quote}
       </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
+    
     </View>
   );
 }
@@ -59,9 +55,32 @@ function App(): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
 
   const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
+    backgroundColor: "yellow",
   };
 
+  useEffect(
+    ()=>{
+      PermissionsAndroid.requestMultiple([
+        PermissionsAndroid.PERMISSIONS.WRITE_CONTACTS,
+        PermissionsAndroid.PERMISSIONS.READ_CONTACTS,
+      ]).then(() => {
+        console.log("Reading contacts")
+        Contacts.getAll().then(
+             carray=>{ 
+              let result=[]
+              for(let x in carray){
+                 result.push({key:carray[x].displayName})
+              }
+              setContacts(result)
+           },
+           err=> console.log(err)
+        );
+      })
+    
+    },[]
+  )
+
+  const [contacts,setContacts]=useState([])
   return (
     <SafeAreaView style={backgroundStyle}>
       <StatusBar
@@ -71,26 +90,19 @@ function App(): React.JSX.Element {
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
         style={backgroundStyle}>
-        <Header />
+      
         <View
           style={{
             backgroundColor: isDarkMode ? Colors.black : Colors.white,
           }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
+         <Text style={styles.TextDec}>   React Native is working </Text>
+         <FlatList
+        data={contacts}
+        renderItem={({item}) => <Text style={styles.item}>{item.key}</Text>}/>
+       
+       <SectionConnected/>
         </View>
+       
       </ScrollView>
     </SafeAreaView>
   );
@@ -113,6 +125,22 @@ const styles = StyleSheet.create({
   highlight: {
     fontWeight: '700',
   },
+  TextDec: {
+    fontFamily: 'courier',
+    color: 'darkgreen',
+    fontSize: 24,
+    padding: 10,
+    margin: 10,
+    backgroundColor:"lightblue"
+  },
+  item: {
+    color: "darkblue",
+    fontFamily: "courier",
+    padding: 10,
+    margin: 20,
+    borderWidth: 3,
+    borderColor: "black"
+  }
 });
 
 export default App;
